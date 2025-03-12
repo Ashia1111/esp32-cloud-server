@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="upload-container">
+        <img src="person.png" alt="Illustration" class="illustration">
+        <div class="upload-box">
+            <h2>Upload file here!</h2>
+        </div>
+        <input type="file" id="fileInput" class="file-input">
+        <button class="upload-btn" onclick="uploadFile()">UPLOAD</button>
+    </div>
+
+    <script>
+    function uploadFile() {
+    const fileInput = document.getElementById('fileInput');
+    if (!fileInput.files.length) {
+        alert("Please select a file.");
+        return;
+    }
+
+    const file = fileInput.files[0];
+    console.log("Uploading file:", file.name, file.type, file.size);  // Debugging
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    fetch("/upload", {
+        method: "POST",
+        body: formData
+    })
+    .then(response => response.text())
+    .then(data => {
+        console.log("Server Response:", data);
+        alert("File uploaded successfully!");
+    })
+    .catch(error => console.error("Error:", error));
+}
+
+    </script>
+</body>
+</html>
