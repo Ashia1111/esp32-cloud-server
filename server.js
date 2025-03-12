@@ -9,6 +9,7 @@ const pdfParse = require("pdf-parse");
 
 const app = express();
 app.use(cors());
+app.use(express.json());
 app.use(express.static("public"));
 
 // ✅ Connect to MongoDB Atlas
@@ -18,14 +19,20 @@ mongoose.connect(MONGO_URI)
   .then(() => console.log("✅ Connected to MongoDB Atlas"))
   .catch(err => console.error("❌ MongoDB Connection Error:", err));
 
+// ✅ Define Schema for ESP32 IP
+const esp32Schema = new mongoose.Schema({
+    ip: String,
+    updatedAt: { type: Date, default: Date.now }
+});
+const ESP32 = mongoose.model("ESP32", esp32Schema);
 
 // ✅ Define File Schema
 const fileSchema = new mongoose.Schema({
-    filename: String,         // Saved file name
-    originalname: String,     // Original file name
-    path: String,             // File storage path
-    fileType: String,         // File type (CSV, PDF, etc.)
-    uploadedAt: { type: Date, default: Date.now } // Timestamp
+    filename: String,         
+    originalname: String,     
+    path: String,             
+    fileType: String,         
+    uploadedAt: { type: Date, default: Date.now }
 });
 const File = mongoose.model("File", fileSchema);
 
@@ -39,13 +46,37 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// ✅ ESP32 IP Address
-const ESP32_IP = "192.168.254.123";
+/*
+======================================
+  ✅ STEP 1: Register ESP32 IP Address
+======================================
+*/
+app.post("/register", async (req, res) => {
+    const { ip } = req.body;
+    if (!ip) return res.status(400).send("❌ No IP provided");
 
-/*  
-=========================================
-  ✅ STEP 7: Upload, Convert & Save to DB
-=========================================
+    try {
+        let esp32 = await ESP32.findOne();
+        if (esp32) {
+            esp32.ip = ip;
+            esp32.updatedAt = Date.now();
+            await esp32.save();
+        } else {
+            esp32 = new ESP32({ ip });
+            await esp32.save();
+        }
+        console.log(`✅ ESP32 registered with IP: ${ip}`);
+        res.send("ESP32 IP Registered");
+    } catch (error) {
+        console.error("❌ Error registering ESP32:", error);
+        res.status(500).send("Error registering ESP32");
+    }
+});
+
+/*
+==========================================
+  ✅ STEP 2: Upload, Convert & Save to DB
+==========================================
 */
 app.post("/upload", upload.single("file"), async (req, res) => {
     if (!req.file) return res.status(400).send("No file uploaded");
@@ -57,7 +88,6 @@ app.post("/upload", upload.single("file"), async (req, res) => {
     try {
         let textData = "";
 
-        // ✅ Extract text from PDF or TXT
         if (req.file.mimetype === "application/pdf") {
             const dataBuffer = fs.readFileSync(originalFilePath);
             const pdfData = await pdfParse(dataBuffer);
@@ -66,11 +96,9 @@ app.post("/upload", upload.single("file"), async (req, res) => {
             textData = fs.readFileSync(originalFilePath, "utf8");
         }
 
-        // ✅ Convert text to CSV format
         const csvData = textData.split("\n").map(line => line.trim()).join("\n");
         fs.writeFileSync(csvFilePath, csvData);
 
-        // ✅ Save file metadata in MongoDB Atlas
         const newFile = new File({
             filename: `${safeName}.csv`,
             originalname: safeName,
@@ -79,7 +107,7 @@ app.post("/upload", upload.single("file"), async (req, res) => {
         });
         await newFile.save();
 
-        // ✅ Send CSV to ESP32
+        // ✅ Send CSV to the latest ESP32 IP
         await sendFileToESP32(csvData);
 
         res.send(`✅ CSV file (${safeName}.csv) saved and sent to ESP32`);
@@ -89,12 +117,24 @@ app.post("/upload", upload.single("file"), async (req, res) => {
     }
 });
 
-// ✅ Function to Send CSV Data to ESP32
+// ✅ Get Latest ESP32 IP
+async function getESP32IP() {
+    const esp32 = await ESP32.findOne().sort({ updatedAt: -1 });
+    return esp32 ? esp32.ip : null;
+}
+
+// ✅ Send CSV Data to the Latest ESP32 IP
 async function sendFileToESP32(csvData) {
     console.log("📡 Sending CSV to ESP32...");
-    
+    const esp32IP = await getESP32IP();
+
+    if (!esp32IP) {
+        console.error("❌ No ESP32 IP registered!");
+        return;
+    }
+
     try {
-        const response = await axios.post(`http://${ESP32_IP}/upload`, csvData, {
+        const response = await axios.post(`http://${esp32IP}/upload`, csvData, {
             headers: { "Content-Type": "text/csv" }
         });
         console.log("✅ File sent to ESP32 successfully:", response.data);
@@ -103,32 +143,32 @@ async function sendFileToESP32(csvData) {
     }
 }
 
-/*  
+/*
 ======================================
-  ✅ STEP 8: Download CSV from MongoDB
+  ✅ STEP 3: Download CSV from MongoDB
 ======================================
 */
 app.get("/download/:filename", async (req, res) => {
     const filename = req.params.filename;
     const localFilePath = path.join(__dirname, "uploads", filename);
 
-    // ✅ Check if the file exists locally
     if (fs.existsSync(localFilePath)) {
         console.log(`✅ Downloading local CSV file: ${filename}`);
         return res.download(localFilePath, filename);
     }
 
     try {
-        // ✅ If not found locally, check in MongoDB
         const fileRecord = await File.findOne({ filename });
 
         if (fileRecord) {
             console.log(`📡 Fetching CSV from MongoDB for: ${filename}`);
             res.download(fileRecord.path, filename);
         } else {
-            // ✅ If not found in MongoDB, fetch from ESP32
             console.log(`📡 Fetching CSV from ESP32 for: ${filename}`);
-            const response = await axios.get(`http://${ESP32_IP}/download`, { responseType: "stream" });
+            const esp32IP = await getESP32IP();
+            if (!esp32IP) return res.status(500).send("❌ No ESP32 IP registered!");
+
+            const response = await axios.get(`http://${esp32IP}/download`, { responseType: "stream" });
             res.setHeader("Content-Type", "text/csv");
             response.data.pipe(res);
         }
@@ -148,5 +188,13 @@ app.get("/files", async (req, res) => {
     }
 });
 
+// ✅ Debugging: Log all registered routes before starting the server
+console.log("Registered Routes:");
+app._router.stack.forEach((r) => {
+    if (r.route && r.route.path) {
+        console.log(`➡ ${r.route.path}`);
+    }
+});
+
 // ✅ Start Server
-app.listen(3000, () => console.log("🚀 Server running at http://localhost:3000"));
+app.listen(3000, "0.0.0.0", () => console.log("🚀 Server running at http://localhost:3000"));
