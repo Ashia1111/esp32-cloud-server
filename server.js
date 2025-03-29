@@ -13,7 +13,7 @@ app.use(express.json());
 app.use(express.static("public"));
 
 // ✅ Connect to MongoDB Atlas
-const MONGO_URI = "mongodb+srv://doctorowenn24:g3hQYdzz2vwzyl69@cluster0.64dxe.mongodb.net/sample_mflix?retryWrites=true&w=majority&appName=Cluster0";
+const MONGO_URI = "mongodb+srv://owenndoc15:owenndoc15@cluster0.ao9mfe3.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
 mongoose.connect(MONGO_URI)
   .then(() => console.log("✅ Connected to MongoDB Atlas"))
@@ -197,4 +197,4 @@ app._router.stack.forEach((r) => {
 });
 
 // ✅ Start Server
-app.listen(3000, "0.0.0.0", () => console.log("🚀 Server running at http://0.0.0.0:3000"));
+app.listen(3000, "0.0.0.0", () => console.log("🚀 Server running at http://localhost:3000"));
