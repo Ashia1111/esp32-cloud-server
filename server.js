@@ -85,4 +85,22 @@ app.get("/latest-csv", async (req, res) => {
     }
 });
 
+// ✅ New Route: Check for New File (returns 200 if new file is uploaded)
+app.get("/check-for-new-file", async (req, res) => {
+    try {
+        const latestFile = await File.findOne().sort({ uploadedAt: -1 });
+
+        if (!latestFile) {
+            // No new file uploaded
+            return res.status(204).send("❌ No new file available");
+        }
+
+        // If a new file is found
+        res.status(200).send("✅ New file available");
+    } catch (error) {
+        console.error("❌ Error checking for new file:", error.message);
+        res.status(500).send("❌ Error checking for new file");
+    }
+});
+
 app.listen(3000, "0.0.0.0", () => console.log("🚀 Server running at http://localhost:3000"));
