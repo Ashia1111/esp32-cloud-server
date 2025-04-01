@@ -103,4 +103,21 @@ app.get("/check-for-new-file", async (req, res) => {
     }
 });
 
+// ✅ New Route: Get Latest CSV Metadata
+app.get("/latest-csv-metadata", async (req, res) => {
+    try {
+        const latestFile = await File.findOne().sort({ uploadedAt: -1 });
+        if (!latestFile) return res.status(404).json({ message: "No CSV file found" });
+
+        res.json({
+            filename: latestFile.filename,
+            uploadedAt: latestFile.uploadedAt
+        });
+    } catch (error) {
+        console.error("❌ Failed to retrieve latest CSV metadata:", error.message);
+        res.status(500).json({ message: "Error retrieving latest CSV metadata" });
+    }
+});
+
+
 app.listen(3000, "0.0.0.0", () => console.log("🚀 Server running at http://localhost:3000"));
