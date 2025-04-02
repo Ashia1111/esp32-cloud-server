@@ -12,14 +12,36 @@ while ($true) {  # Infinite loop to keep checking for changes
             # Add all untracked files
             git add .
 
+            # Check if 'git add' was successful
+            if ($?) {
+                Write-Host "Files staged successfully."
+            } else {
+                Write-Host "Failed to stage files."
+                return  # Exit if adding files failed
+            }
+
             # Commit the changes with --no-verify to bypass any hooks
             $commitMessage = "Auto-commit: Added new uploaded files"
             git commit --no-verify -m $commitMessage
 
+            # Check if commit was successful
+            if ($?) {
+                Write-Host "Commit successful."
+            } else {
+                Write-Host "Commit failed."
+                return  # Exit if commit failed
+            }
+
             # Push the commit to the remote repository (GitHub)
             git push origin main
 
-            Write-Host "Changes committed and pushed successfully."
+            # Check if push was successful
+            if ($?) {
+                Write-Host "Changes committed and pushed successfully."
+            } else {
+                Write-Host "Push failed."
+                return  # Exit if push failed
+            }
         } else {
             Write-Host "No changes detected."
         }
