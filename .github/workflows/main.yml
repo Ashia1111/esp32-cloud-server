@@ -18,7 +18,7 @@ jobs:
 
       - name: Commit and Push Changes
         run: |
-          git config --global user.email "your-email@example.com"
+          git config --global user.email "doctorowenn24@gmail.com"
           git config --global user.name "Craig Owenn"
           git add .
           git commit -m "Auto-updated files"
