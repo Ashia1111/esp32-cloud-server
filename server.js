@@ -120,4 +120,10 @@ app.get("/latest-csv-metadata", async (req, res) => {
 });
 
 
+// ✅ Serve index.html on root
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
 app.listen(3000, "0.0.0.0", () => console.log("🚀 Server running at http://localhost:3000"));
+
