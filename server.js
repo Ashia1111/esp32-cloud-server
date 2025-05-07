@@ -63,7 +63,8 @@ app.post("/upload", upload.single("file"), async (req, res) => {
             filename: `${safeName}.csv`,
             originalname: safeName,
             path: csvFilePath,
-            fileType: "text/csv"
+            fileType: "text/csv",
+            uploadedAt: new Date() // ✅ This ensures correct timestamp
         });
         await newFile.save();
 
@@ -123,10 +124,56 @@ app.get("/latest-csv-metadata", async (req, res) => {
 });
 
 
+  
+
+
 // ✅ Serve index.html on root
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"));
 });
+
+// DELETE a file by ID
+app.delete("/files/:id", async (req, res) => {
+    try {
+      const file = await File.findByIdAndDelete(req.params.id);
+      if (!file) return res.status(404).send("File not found");
+  
+      fs.unlinkSync(file.path); // Delete file from disk
+      res.send("File deleted successfully");
+    } catch (err) {
+      console.error("❌ Error deleting file:", err);
+      res.status(500).send("Server error");
+    }
+  });
+
+  app.get("/files", async (req, res) => {
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // today at 00:00:00
+  
+      const files = await File.find({
+        uploadedAt: { $gte: today }
+      }).sort({ uploadedAt: -1 });
+  
+      res.json(files);
+    } catch (error) {
+      console.error("❌ Failed to fetch today's files:", error.message);
+      res.status(500).send("Server error");
+    }
+  });
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
 
 app.listen(3000, "0.0.0.0", () => console.log("🚀 Server running at http://localhost:3000"));
 

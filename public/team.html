@@ -26,23 +26,63 @@
     </nav>
   </header>
 
-  <!-- 👥 Team Content -->
+  <!-- 👥 Team Section -->
   <main class="team-wrapper">
     <h1 class="team-heading"><span class="abot">ABOT</span> KAMAY TEAM</h1>
+    
     <div class="team-section">
+      <!-- 📸 Team Group Photo -->
       <div class="team-left">
-        <img src="team-full-body.png" alt="Team Full Body">
+        <div class="team-photo-wrapper">
+          <img src="team-full-body.png" alt="Abot-Kamay Group Photo" class="group-photo">
+        </div>
       </div>
+
+      <!-- 🧑‍🤝‍🧑 Team Member Roles -->
       <div class="team-right">
         <h3 class="roles-title">Roles</h3>
         <div class="team-roles">
-          <img src="member1.png" alt="Member 1" class="team-avatar">
-          <img src="member2.png" alt="Member 2" class="team-avatar">
-          <img src="member3.png" alt="Member 3" class="team-avatar">
+          <img src="member1.png" alt="Member 1" class="team-avatar" onclick="showModal(1)">
+          <img src="member2.png" alt="Member 2" class="team-avatar" onclick="showModal(2)">
+          <img src="member3.png" alt="Member 3" class="team-avatar" onclick="showModal(3)">
         </div>
       </div>
     </div>
   </main>
+
+  <!-- 🔲 Modal Structure -->
+  <div id="memberModal" class="modal hidden">
+    <div class="modal-content">
+      <h2 id="memberName">Member Name</h2>
+      <p id="memberDescription">Short description of the member will appear here.</p>
+      <div class="modal-buttons">
+        <button class="modal-btn confirm" onclick="closeModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔽 Script for modal behavior -->
+  <script>
+    const memberData = {
+      1: { name: "John Kenneth Caibigan", description: "A leader who manages the project, a designer for user interface and experience, an analyst for research and documentation, and a developer for coding and system functionality." },
+      2: { name: "Jade Francine Chavez", description: "A member who designs accurate Braille character mappings and creates intuitive, accessible user interfaces to ensure a seamless experience for the teachers." },
+      3: { name: "Craig Owenn Doctor", description: "A member who develops the user interface and server-side functionality while managing the database to ensure smooth data flow, storage, and system performance." }
+    };
+
+    function showModal(memberId) {
+      const modal = document.getElementById('memberModal');
+      document.getElementById('memberName').textContent = memberData[memberId].name;
+      document.getElementById('memberDescription').textContent = memberData[memberId].description;
+      modal.classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('memberModal').classList.add('hidden');
+    }
+  </script>
+
+<script src="script.js"></script>
+
 
 </body>
 </html>

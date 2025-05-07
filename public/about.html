@@ -6,7 +6,57 @@
   <title>About Us - Abot-Kamay</title>
   <link rel="stylesheet" href="style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap" rel="stylesheet">
+
+  <!-- Modal Styling -->
+  <style>
+    .modal {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: fixed;
+      z-index: 9999;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.9);
+    }
+    .modal.hidden {
+      display: none;
+    }
+    .modal-content {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 20px;
+      border-radius: 16px;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+    }
+    .modal-buttons {
+      margin-top: 1rem;
+    }
+    .modal-btn.cancel {
+      background-color: #f39c12;
+      color: white;
+      font-weight: bold;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .modal-btn.cancel:hover {
+      background-color: #e67e22;
+    }
+    .watch-link {
+      font-size: 1rem;
+      font-weight: bold;
+      color: white;
+      text-decoration: underline;
+      margin-left: 1rem;
+    }
+  </style>
 </head>
+
 <body>
 
   <!-- 🔶 Header with Logo + Navigation -->
@@ -23,7 +73,6 @@
       <a href="index.html" class="nav-link">Upload Files</a>
       <a href="list.html" class="nav-link">List of Files</a>
       <a href="team.html" class="nav-link">Meet the Team</a>
-
     </nav>
   </header>
 
@@ -32,9 +81,24 @@
     <h1>ABOT</h1>
     <h2>
       KAMAY
-      <a href="#" class="watch-link">Watch Project Video</a>
+      <a href="#" class="watch-link" onclick="openVideoModal()">WATCH PROJECT VIDEO</a>
     </h2>
 
+    <!-- 📹 Modal Video Player -->
+    <div id="videoModal" class="modal hidden">
+      <div class="modal-content">
+        <iframe 
+          src="https://www.facebook.com/plugins/video.php?height=314&href=https%3A%2F%2Fwww.facebook.com%2F61568481159983%2Fvideos%2F1140297370844689%2F&show_text=false&width=560&t=0" 
+          width="560" height="314" style="border:none;overflow:hidden" scrolling="no" frameborder="0" 
+          allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share">
+        </iframe>
+        <div class="modal-buttons">
+          <button class="modal-btn cancel" onclick="closeVideoModal()">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🔎 Description Box -->
     <div class="about-box">
       <p>
         Abot-Kamay is a capstone innovation created by a team of Electronics Engineering students from Batangas State University. Our mission is to promote inclusive and equitable education for the visually impaired students by providing them a refreshable braille display intended for home-based learning.
@@ -44,6 +108,22 @@
       </p>
     </div>
   </section>
+
+  <!-- 📜 JavaScript -->
+  <script>
+    function openVideoModal() {
+      document.getElementById("videoModal").classList.remove("hidden");
+    }
+
+    function closeVideoModal() {
+      const modal = document.getElementById("videoModal");
+      modal.classList.add("hidden");
+
+      // Stop video playback
+      const iframe = modal.querySelector('iframe');
+      iframe.src = iframe.src;
+    }
+  </script>
 
 </body>
 </html>
