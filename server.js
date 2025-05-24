@@ -13,6 +13,8 @@ app.use(express.json());
 app.use(express.static("public"));
 app.use(express.static("public"));
 app.use(express.static(__dirname)); // <-- add this line
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 
 
 const MONGO_URI = "mongodb+srv://owenndoc15:owenndoc15@cluster0.ao9mfe3.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
