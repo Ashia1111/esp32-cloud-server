@@ -11,11 +11,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.static("public"));
-app.use(express.static("public"));
-app.use(express.static(__dirname)); // <-- add this line
+app.use(express.static(__dirname));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
-
 
 const MONGO_URI = "mongodb+srv://owenndoc15:owenndoc15@cluster0.ao9mfe3.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 mongoose.connect(MONGO_URI)
@@ -23,10 +20,10 @@ mongoose.connect(MONGO_URI)
   .catch(err => console.error("❌ MongoDB Connection Error:", err));
 
 const fileSchema = new mongoose.Schema({
-    filename: String,         
-    originalname: String,     
-    path: String,             
-    fileType: String,         
+    filename: String,
+    originalname: String,
+    path: String,
+    fileType: String,
     uploadedAt: { type: Date, default: Date.now }
 });
 const File = mongoose.model("File", fileSchema);
@@ -66,7 +63,7 @@ app.post("/upload", upload.single("file"), async (req, res) => {
             originalname: safeName,
             path: csvFilePath,
             fileType: "text/csv",
-            uploadedAt: new Date() // ✅ This ensures correct timestamp
+            uploadedAt: new Date()
         });
         await newFile.save();
 
@@ -77,7 +74,6 @@ app.post("/upload", upload.single("file"), async (req, res) => {
     }
 });
 
-// ✅ New Route: Fetch Latest CSV File
 app.get("/latest-csv", async (req, res) => {
     try {
         const latestFile = await File.findOne().sort({ uploadedAt: -1 });
@@ -91,17 +87,10 @@ app.get("/latest-csv", async (req, res) => {
     }
 });
 
-// ✅ New Route: Check for New File (returns 200 if new file is uploaded)
 app.get("/check-for-new-file", async (req, res) => {
     try {
         const latestFile = await File.findOne().sort({ uploadedAt: -1 });
-
-        if (!latestFile) {
-            // No new file uploaded
-            return res.status(204).send("❌ No new file available");
-        }
-
-        // If a new file is found
+        if (!latestFile) return res.status(204).send("❌ No new file available");
         res.status(200).send("✅ New file available");
     } catch (error) {
         console.error("❌ Error checking for new file:", error.message);
@@ -109,7 +98,6 @@ app.get("/check-for-new-file", async (req, res) => {
     }
 });
 
-// ✅ New Route: Get Latest CSV Metadata
 app.get("/latest-csv-metadata", async (req, res) => {
     try {
         const latestFile = await File.findOne().sort({ uploadedAt: -1 });
@@ -125,45 +113,38 @@ app.get("/latest-csv-metadata", async (req, res) => {
     }
 });
 
-
-  
-
-
-// ✅ Serve index.html on root
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// DELETE a file by ID
+app.get("/files", async (req, res) => {
+    try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const files = await File.find({ uploadedAt: { $gte: today } }).sort({ uploadedAt: -1 });
+        res.json(files);
+    } catch (error) {
+        console.error("❌ Failed to fetch today's files:", error.message);
+        res.status(500).send("Server error");
+    }
+});
+
 app.delete("/files/:id", async (req, res) => {
     try {
-      const file = await File.findByIdAndDelete(req.params.id);
-      if (!file) return res.status(404).send("File not found");
-  
-      fs.unlinkSync(file.path); // Delete file from disk
-      res.send("File deleted successfully");
-    } catch (err) {
-      console.error("❌ Error deleting file:", err);
-      res.status(500).send("Server error");
-    }
-  });
+        const file = await File.findByIdAndDelete(req.params.id);
+        if (!file) return res.status(404).send("File not found");
 
-  app.get("/files", async (req, res) => {
-    try {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0); // today at 00:00:00
-  
-      const files = await File.find({
-        uploadedAt: { $gte: today }
-      }).sort({ uploadedAt: -1 });
-  
-      res.json(files);
-    } catch (error) {
-      console.error("❌ Failed to fetch today's files:", error.message);
-      res.status(500).send("Server error");
+        fs.unlinkSync(file.path);
+        res.send("File deleted successfully");
+    } catch (err) {
+        console.error("❌ Error deleting file:", err);
+        res.status(500).send("Server error");
     }
-  });
-  
-  
-  
-app.listen(3000, "0.0.0.0", () => console.log("🚀 Server running at http://localhost:3000"));
+});
+
+// ✅ Render-compatible port binding
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+});
