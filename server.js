@@ -16,8 +16,15 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 const MONGO_URI = "mongodb+srv://owenndoc15:owenndoc15@cluster0.ao9mfe3.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 mongoose.connect(MONGO_URI)
-  .then(() => console.log("✅ Connected to MongoDB Atlas"))
+  .then(async () => {
+    console.log("✅ Connected to MongoDB Atlas");
+
+    // Force a command to ensure the cluster wakes up
+    const result = await mongoose.connection.db.admin().ping();
+    console.log("✅ Pinged MongoDB Atlas:", result);
+  })
   .catch(err => console.error("❌ MongoDB Connection Error:", err));
+
 
 const fileSchema = new mongoose.Schema({
     filename: String,
